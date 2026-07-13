@@ -11,22 +11,6 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
-        @font-face {
-            font-family: "Google Sans";
-            font-style: normal;
-            font-weight: 400;
-            font-display: swap;
-            src: url("https://fonts.gstatic.com/s/googlesans/v14/4UaGrENHsxJLGDuGo1OIlL3Kwp5MKg.woff2") format("woff2");
-        }
-
-        @font-face {
-            font-family: "Google Sans";
-            font-style: normal;
-            font-weight: 500 700;
-            font-display: swap;
-            src: url("https://fonts.gstatic.com/s/googlesans/v14/4UabrENHsxJLGDuGo1OIlNXY6p7NkwzRPw.woff2") format("woff2");
-        }
-
         :root {
             --primary: #0b57d0;
             --primary-hover: #0842a0;
@@ -181,7 +165,8 @@
         .radar-intro {
             display: flex;
             min-width: 0;
-            align-items: center;
+            flex: 1 1 auto;
+            align-items: flex-start;
             gap: 16px;
         }
 
@@ -393,6 +378,64 @@
             font-weight: 600;
         }
 
+        .grid-legend {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px 14px;
+            margin-top: 12px;
+            padding: 0 2px;
+            color: var(--text-secondary);
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        .grid-legend > span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .legend-swatch {
+            width: 10px;
+            height: 10px;
+            flex: 0 0 auto;
+            border-radius: 3px;
+            background: var(--outline);
+        }
+
+        .legend-swatch.good {
+            background: var(--success);
+        }
+
+        .legend-swatch.warning {
+            background: #f9ab00;
+        }
+
+        .legend-swatch.danger {
+            background: var(--error);
+        }
+
+        .legend-swatch.unknown {
+            background: var(--outline);
+        }
+
+        .legend-meta {
+            margin-left: auto;
+        }
+
+        .map-cell-loading {
+            display: inline-flex;
+            width: 16px;
+            height: 16px;
+            flex: 0 0 auto;
+            border: 2px solid rgba(11, 87, 208, 0.22);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 800ms linear infinite;
+        }
+
         .timeline {
             display: flex;
             gap: 8px;
@@ -570,6 +613,15 @@
         .status-dot.danger {
             background: var(--error);
             box-shadow: 0 0 0 4px rgba(179, 38, 30, 0.12);
+        }
+
+        .status-dot.unknown {
+            background: var(--outline);
+            box-shadow: 0 0 0 4px rgba(116, 119, 117, 0.12);
+        }
+
+        .hourly-list > .info-placeholder {
+            grid-column: 1 / -1;
         }
 
         .hourly-heading {
@@ -1009,8 +1061,12 @@
             }
 
             .radar-header {
-                align-items: center;
+                align-items: flex-start;
                 gap: 12px;
+            }
+
+            .radar-actions {
+                align-self: flex-start;
             }
 
             .radar-intro {
@@ -1066,6 +1122,15 @@
             #map {
                 height: 300px;
                 border-radius: 16px;
+            }
+
+            .grid-legend {
+                gap: 7px 10px;
+            }
+
+            .legend-meta {
+                width: 100%;
+                margin-left: 0;
             }
 
             .forecast-topline {
@@ -1206,7 +1271,7 @@
                         </div>
                         <div>
                             <h2 id="radar-title" class="radar-title">Морские условия <span id="radar-updated" class="radar-updated"></span></h2>
-                            <p id="map-status-text" class="radar-status">Волны, ветер и почасовой прогноз для дайв-спотов Пхукета.</p>
+                            <p id="map-status-text" class="radar-status">Гексагональная морская сетка прогноза в радиусе 100 км от текущего положения.</p>
                         </div>
                     </div>
 
@@ -1227,7 +1292,14 @@
                 </div>
 
                 <div id="map-wrapper" class="map-wrapper hidden">
-                    <div id="map" aria-label="Карта морских условий"></div>
+                    <div id="map" aria-label="Сеточная карта морских условий"></div>
+                    <div class="grid-legend" aria-label="Легенда карты">
+                        <span><i class="legend-swatch good"></i>до 0,5 м</span>
+                        <span><i class="legend-swatch warning"></i>0,6–1,4 м</span>
+                        <span><i class="legend-swatch danger"></i>выше 1,4 м</span>
+                        <span><i class="legend-swatch unknown"></i>нет данных</span>
+                        <span class="legend-meta">Радиус 100 км · гексагоны 20 км</span>
+                    </div>
                     <div id="timeline-container" class="timeline" aria-label="Выбор дня"></div>
                     <div id="map-info-panel" class="info-panel">
                         <div class="info-placeholder">
@@ -1235,7 +1307,7 @@
                                 <circle cx="12" cy="12" r="9"/>
                                 <path d="M12 10v6M12 7h.01" stroke-linecap="round"/>
                             </svg>
-                            <span>Выберите цветную зону на карте, чтобы открыть подробный прогноз.</span>
+                            <span>Выберите морскую ячейку на карте, чтобы открыть подробный прогноз.</span>
                         </div>
                     </div>
                 </div>
@@ -1277,7 +1349,8 @@
 
         <footer class="page-footer">
             Для коммерческих предложений —
-            <a href="https://t.me/qqneo" target="_blank" rel="noopener noreferrer">@qqneo</a>
+            <a href="https://t.me/qqneo" target="_blank" rel="noopener noreferrer">@qqneo</a><br>
+            Морские данные: <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a> / DWD
         </footer>
     </main>
 
@@ -1435,35 +1508,69 @@
             return Math.min(max, Math.max(min, parsed));
         }
 
-        function initFromUrl() {
-            const params = new URLSearchParams(window.location.search);
-            const encodedDives = params.get("dives");
+        const DIVES_URL_PARAM = "dives";
 
-            if (encodedDives) {
-                encodedDives.split(";").forEach((pair) => {
-                    const [depth, time] = pair.split(",").map(Number);
-                    if (Number.isFinite(depth) && Number.isFinite(time)) {
-                        addDiveCard(depth, time, false);
-                    }
-                });
+        function readDivesFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const encodedDives = params.get(DIVES_URL_PARAM);
+
+            if (!encodedDives) return [];
+
+            return encodedDives
+                .split(";")
+                .map((pair) => pair.split(",").map((value) => Number.parseInt(value, 10)))
+                .filter(([depth, time]) => (
+                    Number.isFinite(depth)
+                    && Number.isFinite(time)
+                    && depth >= 1
+                    && depth <= 40
+                    && time >= 1
+                ));
+        }
+
+        function initFromUrl() {
+            const container = document.getElementById("dive-container");
+            const dives = readDivesFromUrl();
+
+            container.replaceChildren();
+            nextDiveId = 1;
+
+            if (dives.length) {
+                dives.forEach(([depth, time]) => addDiveCard(depth, time, false));
+            } else {
+                addDiveCard(15, 25, false);
             }
 
             renumberDiveCards();
             calculateAll();
+            updateUrl();
         }
 
         function updateUrl() {
             const dives = getDiveCards().map((card) => {
-                const depth = card.querySelector("[data-role='depth']").value;
-                const time = card.querySelector("[data-role='time']").value;
+                const depthInput = card.querySelector("[data-role='depth']");
+                const timeInput = card.querySelector("[data-role='time']");
+                const depth = normalizeInputValue(depthInput.value, 15, 1, 40);
+                const time = normalizeInputValue(timeInput.value, 25, 1);
+
                 return `${depth},${time}`;
             });
 
             const url = new URL(window.location.href);
-            if (dives.length) url.searchParams.set("dives", dives.join(";"));
-            else url.searchParams.delete("dives");
 
-            window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+            if (dives.length) {
+                url.searchParams.set(DIVES_URL_PARAM, dives.join(";"));
+            } else {
+                url.searchParams.delete(DIVES_URL_PARAM);
+            }
+
+            try {
+                window.history.replaceState(null, "", url.href);
+            } catch (error) {
+                // Некоторые браузеры запрещают менять history у локального file://.
+                // После публикации через HTTPS/localhost URL обновляется нормально.
+                console.warn("Не удалось обновить URL:", error);
+            }
         }
 
         function addDiveCard(initialDepth = 15, initialTime = 25, shouldFocus = true) {
@@ -1711,28 +1818,31 @@
 
         document.getElementById("add-dive-btn").addEventListener("click", () => addDiveCard(15, 25));
 
-        // -------------------- МОРСКОЙ РАДАР --------------------
+        // -------------------- МОРСКАЯ СЕТОЧНАЯ КАРТА --------------------
 
         let map = null;
         let selectedDayIndex = 1;
         let spotsData = [];
-        let mapCircles = [];
-        let selectionCircle = null;
+        let mapCells = [];
+        let selectionLayer = null;
+        let radiusLayer = null;
+        let userMarker = null;
         let activeSpotId = null;
         let isWeatherCollapsed = false;
+        let gridCenter = null;
+        let lastUpdatedAt = null;
 
-        const DEFAULT_COORDS = { lat: 7.8965, lon: 98.35 };
-        const MARINE_CACHE_KEY = "marine-radar-forecast-v2";
-
-        const PHUKET_SPOTS = [
-            { id: "west_north", name: "Май Као и Най Янг", lat: 8.0921, lon: 98.2743, shoreAzimuth: 280 },
-            { id: "west_mid", name: "Патонг и Камала", lat: 7.8965, lon: 98.2412, shoreAzimuth: 270 },
-            { id: "west_south", name: "Ката и Карон", lat: 7.8224, lon: 98.2701, shoreAzimuth: 260 },
-            { id: "south_promthep", name: "Раваи и мыс Промтхеп", lat: 7.741, lon: 98.3032, shoreAzimuth: 180 },
-            { id: "east_chalong", name: "Бухта Чалонг", lat: 7.8182, lon: 98.375, shoreAzimuth: 90 },
-            { id: "island_racha", name: "Остров Рача Яй", lat: 7.6042, lon: 98.3681, shoreAzimuth: 0 },
-            { id: "island_phi_phi", name: "Острова Пхи-Пхи", lat: 7.7123, lon: 98.7421, shoreAzimuth: 120 }
-        ];
+        const DEFAULT_COORDS = { lat: 7.8965, lon: 98.35, isFallback: true };
+        const MARINE_CACHE_KEY = "marine-grid-forecast-v6";
+        const OLD_MARINE_CACHE_KEYS = ["marine-grid-forecast-v5", "marine-grid-forecast-v4", "marine-grid-forecast-v3", "marine-radar-forecast-v2"];
+        const GRID_RADIUS_KM = 100;
+        const GRID_STEP_KM = 20;
+        const GRID_HEX_RADIUS_KM = GRID_STEP_KM / Math.sqrt(3);
+        const GRID_HEX_DRAW_SCALE = 1.008;
+        const GRID_BATCH_SIZE = 100;
+        const GRID_REQUEST_DELAY_MS = 800;
+        const GRID_MAX_RETRIES = 3;
+        const MAX_SEA_SNAP_KM = 18;
 
         const geoButton = document.getElementById("geo-btn");
         const refreshButton = document.getElementById("force-refresh-btn");
@@ -1742,16 +1852,17 @@
         refreshButton.addEventListener("click", forceRefreshData);
         toggleWeatherButton.addEventListener("click", toggleWeatherBlock);
 
-        function setRadarLoading(isLoading) {
+        function setRadarLoading(isLoading, label = "Показать морскую карту") {
             const loader = document.getElementById("btn-svg-loader");
             const locationIcon = document.getElementById("btn-svg-location");
             const text = document.getElementById("btn-text");
 
             geoButton.disabled = isLoading;
+            refreshButton.disabled = isLoading;
             loader.classList.toggle("hidden", !isLoading);
             loader.classList.toggle("spin", isLoading);
             locationIcon.classList.toggle("hidden", isLoading);
-            text.textContent = isLoading ? "Загрузка прогноза…" : "Показать морскую карту";
+            text.textContent = isLoading ? label : "Показать морскую карту";
         }
 
         function setRadarUpdatedAt(timestamp) {
@@ -1782,8 +1893,8 @@
         }
 
         async function initMarineRadar() {
-            setRadarLoading(true);
-            document.getElementById("map-status-text").textContent = "Получаем текущее местоположение и обновляем прогноз…";
+            setRadarLoading(true, "Определяем положение…");
+            document.getElementById("map-status-text").textContent = "Получаем текущее местоположение…";
 
             const coords = await getUserCoordinates();
 
@@ -1791,85 +1902,361 @@
                 await fetchAndRender(coords);
             } catch (error) {
                 console.error(error);
-                document.getElementById("map-status-text").textContent = "Не удалось загрузить прогноз. Проверьте подключение и попробуйте снова.";
+
+                const message = error?.status === 429
+                    ? "Сервис прогноза временно ограничил запросы. Подождите минуту и обновите карту."
+                    : "Не удалось построить морскую сетку. Проверьте подключение и попробуйте снова.";
+
+                document.getElementById("map-status-text").textContent = message;
                 setRadarLoading(false);
-            }
-        }
-
-        async function getGeolocationPermissionState() {
-            if (!navigator.permissions?.query) return "unknown";
-
-            try {
-                const permission = await navigator.permissions.query({ name: "geolocation" });
-                return permission.state;
-            } catch {
-                return "unknown";
             }
         }
 
         function getUserCoordinates() {
             return new Promise((resolve) => {
                 if (!navigator.geolocation) {
-                    resolve(DEFAULT_COORDS);
+                    resolve({ ...DEFAULT_COORDS });
                     return;
                 }
 
                 navigator.geolocation.getCurrentPosition(
                     (position) => resolve({
                         lat: position.coords.latitude,
-                        lon: position.coords.longitude
+                        lon: position.coords.longitude,
+                        isFallback: false
                     }),
-                    () => resolve(DEFAULT_COORDS),
+                    () => resolve({ ...DEFAULT_COORDS }),
                     {
                         enableHighAccuracy: true,
-                        timeout: 10000,
+                        timeout: 12000,
                         maximumAge: 0
                     }
                 );
             });
         }
 
-        function saveMarineCache(updatedAt) {
+        function saveMarineCache(updatedAt = lastUpdatedAt) {
+            if (!gridCenter || !spotsData.length || !updatedAt) return;
+
             try {
                 localStorage.setItem(MARINE_CACHE_KEY, JSON.stringify({
+                    version: 6,
                     updatedAt,
+                    center: gridCenter,
                     spotsData
                 }));
+                OLD_MARINE_CACHE_KEYS.forEach((key) => localStorage.removeItem(key));
             } catch (error) {
-                console.warn("Не удалось сохранить прогноз в localStorage", error);
+                console.warn("Не удалось сохранить морскую сетку в localStorage", error);
             }
         }
 
         function restoreMarineCache() {
+            let cache;
+
             try {
                 const raw = localStorage.getItem(MARINE_CACHE_KEY);
                 if (!raw) return false;
+                cache = JSON.parse(raw);
+            } catch (error) {
+                console.warn("Повреждён кэш морской сетки", error);
+                localStorage.removeItem(MARINE_CACHE_KEY);
+                return false;
+            }
 
-                const cache = JSON.parse(raw);
-                if (!Array.isArray(cache.spotsData) || !cache.spotsData.length) return false;
+            const center = cache?.center;
+            const isValid = cache?.version === 6
+                && Array.isArray(cache?.spotsData)
+                && cache.spotsData.length > 0
+                && Number.isFinite(center?.lat)
+                && Number.isFinite(center?.lon);
 
-                spotsData = cache.spotsData;
-                setRadarUpdatedAt(cache.updatedAt);
-                setupMapLayout(DEFAULT_COORDS, { showUserLocation: false });
-                document.getElementById("map-status-text").textContent = "Показан сохранённый прогноз. Нажмите обновить, чтобы получить актуальные данные.";
+            if (!isValid) {
+                localStorage.removeItem(MARINE_CACHE_KEY);
+                return false;
+            }
+
+            spotsData = cache.spotsData;
+            gridCenter = center;
+            lastUpdatedAt = cache.updatedAt;
+            setRadarUpdatedAt(cache.updatedAt);
+
+            try {
+                setupMapLayout(gridCenter, { showUserLocation: false, fromCache: true });
+                document.getElementById("map-status-text").textContent = `Сохранённая гекс-сетка: ${spotsData.length} ячеек в радиусе 100 км.`;
                 return true;
             } catch (error) {
-                console.warn("Не удалось восстановить прогноз из localStorage", error);
-                localStorage.removeItem(MARINE_CACHE_KEY);
+                // Валидные данные не удаляем из-за ошибки отрисовки карты.
+                console.warn("Не удалось отобразить сохранённую морскую сетку", error);
                 return false;
             }
         }
 
         async function fetchAndRender(coords) {
-            await load7DaysForecastWithWeatherAndHourly();
+            const previousState = {
+                gridCenter,
+                spotsData,
+                activeSpotId,
+                lastUpdatedAt
+            };
 
-            const updatedAt = Date.now();
-            saveMarineCache(updatedAt);
-            setRadarUpdatedAt(updatedAt);
-            setupMapLayout(coords, { showUserLocation: true });
+            const nextCenter = {
+                lat: coords.lat,
+                lon: coords.lon,
+                isFallback: Boolean(coords.isFallback)
+            };
+
+            gridCenter = nextCenter;
+            activeSpotId = null;
+
+            const points = createMarineGridPoints(nextCenter);
+            const totalBatches = Math.ceil(points.length / GRID_BATCH_SIZE);
+
+            setRadarLoading(true, "Строим морскую сетку…");
+            document.getElementById("map-status-text").textContent = `Запрашиваем морские ячейки: 0 из ${totalBatches}…`;
+
+            try {
+                const nextSpots = await loadMarineGrid(points, (completed) => {
+                    document.getElementById("map-status-text").textContent = `Запрашиваем морские ячейки: ${completed} из ${totalBatches}…`;
+                });
+
+                if (!nextSpots.length) {
+                    throw new Error("No marine grid cells returned");
+                }
+
+                spotsData = nextSpots;
+                lastUpdatedAt = Date.now();
+                saveMarineCache(lastUpdatedAt);
+                setRadarUpdatedAt(lastUpdatedAt);
+                setupMapLayout(nextCenter, { showUserLocation: !coords.isFallback, fromCache: false });
+
+                document.getElementById("map-status-text").textContent = coords.isFallback
+                    ? `Геопозиция недоступна. Показана гекс-сетка вокруг Пхукета: ${spotsData.length} ячеек.`
+                    : `Показано ${spotsData.length} гексагональных ячеек в радиусе 100 км.`;
+            } catch (error) {
+                gridCenter = previousState.gridCenter;
+                spotsData = previousState.spotsData;
+                activeSpotId = previousState.activeSpotId;
+                lastUpdatedAt = previousState.lastUpdatedAt;
+                throw error;
+            }
         }
 
-        function setupMapLayout(coords, { showUserLocation = true } = {}) {
+        function localKmToCoordinates(center, northKm, eastKm) {
+            const latitude = center.lat + northKm / 110.574;
+            const longitudeScale = Math.max(0.15, Math.cos(latitude * Math.PI / 180));
+            const longitude = center.lon + eastKm / (111.32 * longitudeScale);
+
+            return { lat: latitude, lon: longitude };
+        }
+
+        function getHexLocalVertices(eastKm, northKm, scale = 1) {
+            const radius = GRID_HEX_RADIUS_KM * scale;
+
+            return Array.from({ length: 6 }, (_, index) => {
+                // Pointy-top: верхняя и нижняя вершины направлены строго по вертикали.
+                const angle = (30 + index * 60) * Math.PI / 180;
+
+                return {
+                    eastKm: eastKm + radius * Math.cos(angle),
+                    northKm: northKm + radius * Math.sin(angle)
+                };
+            });
+        }
+
+        function isHexInsideCoverage(eastKm, northKm) {
+            // Центры ограничиваем радиусом 95 км. Вершины крайних ячеек
+            // доходят примерно до 100 км и образуют почти ровный круг.
+            const centerRadiusKm = GRID_RADIUS_KM - GRID_STEP_KM / 4;
+            return Math.hypot(eastKm, northKm) <= centerRadiusKm + 0.01;
+        }
+
+        function createMarineGridPoints(center) {
+            const points = [];
+            const axialLimit = Math.ceil(GRID_RADIUS_KM / GRID_STEP_KM) + 3;
+
+            // Аксиальная гексагональная сетка. Расстояние между соседними
+            // центрами равно GRID_STEP_KM, поэтому ячейки сходятся без щелей.
+            for (let row = -axialLimit; row <= axialLimit; row += 1) {
+                for (let column = -axialLimit; column <= axialLimit; column += 1) {
+                    const eastKm = GRID_HEX_RADIUS_KM * Math.sqrt(3) * (column + row / 2);
+                    const northKm = GRID_HEX_RADIUS_KM * 1.5 * row;
+
+                    // Формируем компактный почти круглый контур без пустых промежутков.
+                    if (!isHexInsideCoverage(eastKm, northKm)) continue;
+
+                    const coordinates = localKmToCoordinates(center, northKm, eastKm);
+
+                    points.push({
+                        requestedLat: coordinates.lat,
+                        requestedLon: coordinates.lon,
+                        northKm,
+                        eastKm,
+                        row,
+                        column
+                    });
+                }
+            }
+
+            return points.sort((a, b) => (
+                Math.hypot(a.northKm, a.eastKm) - Math.hypot(b.northKm, b.eastKm)
+            ));
+        }
+
+        async function loadMarineGrid(points, onProgress) {
+            const batches = [];
+            for (let index = 0; index < points.length; index += GRID_BATCH_SIZE) {
+                batches.push(points.slice(index, index + GRID_BATCH_SIZE));
+            }
+
+            const cells = [];
+
+            for (let index = 0; index < batches.length; index += 1) {
+                if (index > 0) await wait(GRID_REQUEST_DELAY_MS);
+
+                cells.push(...await fetchMarineGridBatch(batches[index]));
+                onProgress?.(index + 1);
+            }
+
+            // Не объединяем ячейки по координатам модели Open-Meteo:
+            // несколько запрошенных точек могут привязаться к одной морской точке.
+            return cells.sort((a, b) => a.distanceKm - b.distanceKm);
+        }
+
+        async function fetchMarineGridBatch(batch) {
+            const url = new URL("https://marine-api.open-meteo.com/v1/marine");
+            url.searchParams.set("latitude", batch.map((point) => point.requestedLat.toFixed(5)).join(","));
+            url.searchParams.set("longitude", batch.map((point) => point.requestedLon.toFixed(5)).join(","));
+            url.searchParams.set("daily", "wave_height_max,wave_direction_dominant,wave_period_max");
+            url.searchParams.set("timezone", "auto");
+            url.searchParams.set("cell_selection", "sea");
+            url.searchParams.set("forecast_days", "7");
+
+            const response = await fetchWithRetry(url, {
+                retries: GRID_MAX_RETRIES,
+                baseDelayMs: 1600
+            });
+
+            const payload = await response.json();
+            const responses = Array.isArray(payload) ? payload : [payload];
+
+            return responses
+                .map((data, index) => createSeaCell(batch[index], data))
+                .filter(Boolean);
+        }
+
+        async function fetchWithRetry(url, { retries = 2, baseDelayMs = 1200 } = {}) {
+            let lastError = null;
+
+            for (let attempt = 0; attempt <= retries; attempt += 1) {
+                try {
+                    const response = await fetch(url);
+
+                    if (response.ok) return response;
+
+                    const error = new Error(`API request failed: ${response.status}`);
+                    error.status = response.status;
+
+                    const retryable = [429, 502, 503, 504].includes(response.status);
+                    if (!retryable || attempt >= retries) throw error;
+
+                    const retryAfter = Number(response.headers.get("Retry-After"));
+                    const delayMs = Number.isFinite(retryAfter) && retryAfter > 0
+                        ? retryAfter * 1000
+                        : baseDelayMs * (2 ** attempt) + Math.round(Math.random() * 400);
+
+                    await wait(delayMs);
+                    lastError = error;
+                } catch (error) {
+                    lastError = error;
+
+                    if (error?.status || attempt >= retries) throw error;
+                    await wait(baseDelayMs * (2 ** attempt));
+                }
+            }
+
+            throw lastError || new Error("API request failed");
+        }
+
+        function wait(milliseconds) {
+            return new Promise((resolve) => setTimeout(resolve, milliseconds));
+        }
+
+        function createSeaCell(requested, data) {
+            if (!requested) return null;
+
+            const cellLatitude = requested.requestedLat;
+            const cellLongitude = requested.requestedLon;
+            const sourceLatitude = Number(data?.latitude);
+            const sourceLongitude = Number(data?.longitude);
+            const hasSourceCoordinates = Number.isFinite(sourceLatitude) && Number.isFinite(sourceLongitude);
+
+            const snapDistanceKm = hasSourceCoordinates
+                ? haversineKm(cellLatitude, cellLongitude, sourceLatitude, sourceLongitude)
+                : null;
+
+            const timesFromApi = data?.daily?.time;
+            const hasMarineData = !data?.error
+                && hasSourceCoordinates
+                && Number.isFinite(snapDistanceKm)
+                && snapDistanceKm <= MAX_SEA_SNAP_KM
+                && Array.isArray(timesFromApi)
+                && timesFromApi.length > 0;
+
+            // Даже если для позиции нет близкой морской модели, сам гексагон
+            // сохраняется и рисуется серым. Поэтому в круге больше нет дыр.
+            const times = hasMarineData
+                ? timesFromApi
+                : Array.from({ length: 7 }, (_, dayIndex) => {
+                    const date = new Date();
+                    date.setHours(12, 0, 0, 0);
+                    date.setDate(date.getDate() + dayIndex);
+                    return date.toISOString().slice(0, 10);
+                });
+
+            const distanceKm = Math.hypot(requested.northKm, requested.eastKm);
+            const bearing = bearingDegrees(gridCenter.lat, gridCenter.lon, cellLatitude, cellLongitude);
+            const forecast = times.map((timeString, dayIndex) => {
+                const date = new Date(`${timeString}T12:00:00`);
+
+                return {
+                    dateStr: date.toLocaleDateString("ru-RU", { weekday: "short", day: "numeric" }),
+                    waveHeight: hasMarineData ? data.daily?.wave_height_max?.[dayIndex] ?? null : null,
+                    waveDirection: hasMarineData ? data.daily?.wave_direction_dominant?.[dayIndex] ?? null : null,
+                    wavePeriod: hasMarineData ? data.daily?.wave_period_max?.[dayIndex] ?? null : null,
+                    airTemp: null,
+                    waterTemp: null,
+                    windSpeed: null,
+                    windGusts: null,
+                    windDirection: null,
+                    currentSpeedKn: null,
+                    currentDirection: null,
+                    hourly: []
+                };
+            });
+
+            return {
+                id: `sea-${requested.column}-${requested.row}`,
+                name: formatCellName(distanceKm, bearing),
+                lat: cellLatitude,
+                lon: cellLongitude,
+                sourceLat: hasSourceCoordinates ? sourceLatitude : cellLatitude,
+                sourceLon: hasSourceCoordinates ? sourceLongitude : cellLongitude,
+                northKm: requested.northKm,
+                eastKm: requested.eastKm,
+                row: requested.row,
+                column: requested.column,
+                distanceKm,
+                bearing,
+                snapDistanceKm,
+                unavailable: !hasMarineData,
+                forecast,
+                detailsLoaded: false,
+                detailsLoading: false
+            };
+        }
+
+        function setupMapLayout(center, { showUserLocation = true, fromCache = false } = {}) {
             const mapWrapper = document.getElementById("map-wrapper");
             const launch = document.getElementById("radar-launch");
 
@@ -1886,119 +2273,63 @@
 
             map = L.map("map", {
                 attributionControl: false,
-                zoomControl: true
-            }).setView([coords.lat, coords.lon], 10);
+                zoomControl: true,
+                preferCanvas: true
+            }).setView([center.lat, center.lon], 8);
 
             L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
                 maxZoom: 19
             }).addTo(map);
 
+            // Рассчитываем границы независимо от слоя. getBounds() у L.circle нельзя
+            // вызывать до полной инициализации карты — это и вызывало layerPointToLatLng.
+            const radiusBounds = L.latLng(center.lat, center.lon)
+                .toBounds(GRID_RADIUS_KM * 2000);
+
+            radiusLayer = L.circle([center.lat, center.lon], {
+                radius: GRID_RADIUS_KM * 1000,
+                color: "#0b57d0",
+                weight: 1.5,
+                opacity: 0.65,
+                dashArray: "7 8",
+                fill: false,
+                interactive: false
+            }).addTo(map);
+
             if (showUserLocation) {
-                L.circleMarker([coords.lat, coords.lon], {
+                userMarker = L.circleMarker([center.lat, center.lon], {
                     radius: 7,
                     color: "#ffffff",
                     weight: 3,
                     fillColor: "#0b57d0",
                     fillOpacity: 1
-                }).addTo(map).bindPopup("Ваше местоположение");
+                }).addTo(map).bindPopup("Ваше текущее местоположение");
+            } else if (fromCache) {
+                userMarker = L.circleMarker([center.lat, center.lon], {
+                    radius: 6,
+                    color: "#ffffff",
+                    weight: 3,
+                    fillColor: "#5f6368",
+                    fillOpacity: 0.9
+                }).addTo(map).bindPopup("Центр сохранённой сетки");
             }
 
-            selectedDayIndex = Math.min(selectedDayIndex, Math.max(0, spotsData[0]?.forecast?.length - 1));
+            selectedDayIndex = Math.min(
+                selectedDayIndex,
+                Math.max(0, spotsData[0]?.forecast?.length - 1)
+            );
+
             buildTimelineButtons();
             renderSeaZones();
+            resetInfoPanel();
 
-            requestAnimationFrame(() => map.invalidateSize());
-        }
-
-        async function load7DaysForecastWithWeatherAndHourly() {
-            const results = await Promise.all(PHUKET_SPOTS.map(async (spot) => {
-                try {
-                    const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${spot.lat}&longitude=${spot.lon}&daily=wave_height_max,wave_direction_dominant&hourly=wave_height,sea_surface_temperature&timezone=auto&cell_selection=sea&forecast_days=7`;
-                    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${spot.lat}&longitude=${spot.lon}&daily=temperature_2m_max&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m&timezone=auto&forecast_days=7`;
-
-                    const [marineResponse, weatherResponse] = await Promise.all([
-                        fetch(marineUrl),
-                        fetch(weatherUrl)
-                    ]);
-
-                    if (!marineResponse.ok || !weatherResponse.ok) {
-                        throw new Error("Forecast API request failed");
-                    }
-
-                    const [marineData, weatherData] = await Promise.all([
-                        marineResponse.json(),
-                        weatherResponse.json()
-                    ]);
-
-                    const daysForecast = marineData.daily.time.map((timeString, dayIndex) => {
-                        const date = new Date(`${timeString}T12:00:00`);
-                        const hourly = [];
-                        const startIndex = dayIndex * 24;
-
-                        for (let hour = 0; hour < 24; hour += 1) {
-                            const index = startIndex + hour;
-                            hourly.push({
-                                hour,
-                                waveHeight: marineData.hourly?.wave_height?.[index] ?? null,
-                                windSpeed: weatherData.hourly?.wind_speed_10m?.[index] ?? null,
-                                windGusts: weatherData.hourly?.wind_gusts_10m?.[index] ?? null,
-                                windDir: weatherData.hourly?.wind_direction_10m?.[index] ?? null
-                            });
-                        }
-
-                        const midday = hourly[12];
-                        const waterTemperatures = marineData.hourly?.sea_surface_temperature
-                            ?.slice(startIndex, startIndex + 24)
-                            .filter(Number.isFinite) ?? [];
-                        const waterTemp = waterTemperatures.length
-                            ? waterTemperatures.reduce((sum, value) => sum + value, 0) / waterTemperatures.length
-                            : null;
-
-                        return {
-                            dateStr: date.toLocaleDateString("ru-RU", { weekday: "short", day: "numeric" }),
-                            waveHeight: marineData.daily.wave_height_max?.[dayIndex] ?? null,
-                            waveDirection: marineData.daily.wave_direction_dominant?.[dayIndex] ?? null,
-                            airTemp: weatherData.daily.temperature_2m_max?.[dayIndex] ?? null,
-                            waterTemp,
-                            windSpeed: midday.windSpeed,
-                            windGusts: midday.windGusts,
-                            windDirection: midday.windDir,
-                            hourly
-                        };
-                    });
-
-                    return { ...spot, forecast: daysForecast };
-                } catch (error) {
-                    console.warn(`Fallback forecast for ${spot.name}`, error);
-                    return { ...spot, forecast: createFallbackForecast() };
-                }
-            }));
-
-            spotsData = results;
-        }
-
-        function createFallbackForecast() {
-            return Array.from({ length: 7 }, (_, dayIndex) => {
-                const date = new Date();
-                date.setDate(date.getDate() + dayIndex);
-
-                return {
-                    dateStr: date.toLocaleDateString("ru-RU", { weekday: "short", day: "numeric" }),
-                    waveHeight: null,
-                    waveDirection: null,
-                    airTemp: null,
-                    waterTemp: null,
-                    windSpeed: null,
-                    windGusts: null,
-                    windDirection: null,
-                    hourly: Array.from({ length: 24 }, (_, hour) => ({
-                        hour,
-                        waveHeight: null,
-                        windSpeed: null,
-                        windGusts: null,
-                        windDir: null
-                    }))
-                };
+            requestAnimationFrame(() => {
+                if (!map) return;
+                map.invalidateSize();
+                map.fitBounds(radiusBounds, {
+                    padding: [18, 18],
+                    animate: false
+                });
             });
         }
 
@@ -2035,6 +2366,355 @@
             });
         }
 
+        function renderSeaZones() {
+            if (!map || !spotsData.length) return;
+
+            mapCells.forEach((cell) => map.removeLayer(cell));
+            mapCells = [];
+
+            if (selectionLayer) {
+                map.removeLayer(selectionLayer);
+                selectionLayer = null;
+            }
+
+            spotsData.forEach((spot) => {
+                const day = spot.forecast?.[selectedDayIndex];
+                if (!day) return;
+
+                const color = getWaveColor(day.waveHeight);
+                const hexagon = L.polygon(getHexLatLngs(spot, GRID_HEX_DRAW_SCALE), {
+                    color,
+                    fillColor: color,
+                    fillOpacity: spot.unavailable ? 0.22 : 0.36,
+                    opacity: 0.76,
+                    weight: 1,
+                    lineCap: "round",
+                    lineJoin: "round",
+                    interactive: true
+                }).addTo(map);
+
+                const unavailableNote = spot.unavailable
+                    ? "Нет близкой морской точки прогноза"
+                    : `Макс. волна: ${formatMetric(day.waveHeight, 1, " м")}<br>Период: ${formatMetric(day.wavePeriod, 1, " с")}`;
+
+                hexagon.bindTooltip(
+                    `<strong>${spot.name}</strong><br>${unavailableNote}`,
+                    {
+                        direction: "top",
+                        className: "spot-tooltip",
+                        opacity: 1
+                    }
+                );
+
+                hexagon.on("click", () => {
+                    activeSpotId = spot.id;
+                    hexagon.getElement()?.blur();
+                    renderSeaZones();
+                    openCellForecast(spot);
+                });
+
+                mapCells.push(hexagon);
+            });
+
+            const activeSpot = spotsData.find((spot) => spot.id === activeSpotId);
+            if (activeSpot) drawSelectionCell(activeSpot);
+
+            const day = spotsData[0]?.forecast?.[selectedDayIndex];
+            const label = selectedDayIndex === 0
+                ? "сегодня"
+                : selectedDayIndex === 1
+                    ? "завтра"
+                    : day?.dateStr || "выбранный день";
+
+            document.getElementById("map-status-text").textContent = `Гекс-сетка на ${label}: ${spotsData.length} ячеек в радиусе 100 км.`;
+        }
+
+        function drawSelectionCell(spot) {
+            if (!map || !spot) return;
+
+            if (selectionLayer) map.removeLayer(selectionLayer);
+
+            selectionLayer = L.polygon(getHexLatLngs(spot, 1.075), {
+                color: "#0b57d0",
+                weight: 3,
+                opacity: 1,
+                dashArray: "7 6",
+                fill: false,
+                lineCap: "round",
+                lineJoin: "round",
+                interactive: false
+            }).addTo(map);
+
+            selectionLayer.bringToFront();
+        }
+
+        function getHexLatLngs(spot, scale = 1) {
+            return getHexLocalVertices(spot.eastKm, spot.northKm, scale).map((vertex) => {
+                const coordinates = localKmToCoordinates(
+                    gridCenter,
+                    vertex.northKm,
+                    vertex.eastKm
+                );
+
+                return [coordinates.lat, coordinates.lon];
+            });
+        }
+
+        async function openCellForecast(spot) {
+            if (spot.unavailable) {
+                showSpotVerdict(spot, spot.forecast[selectedDayIndex], true);
+                return;
+            }
+
+            showCellLoading(spot);
+
+            try {
+                await ensureCellDetails(spot);
+                showSpotVerdict(spot, spot.forecast[selectedDayIndex]);
+            } catch (error) {
+                console.warn("Не удалось загрузить детализацию ячейки", error);
+                showSpotVerdict(spot, spot.forecast[selectedDayIndex], true);
+            }
+        }
+
+        async function ensureCellDetails(spot) {
+            if (spot.detailsLoaded) return;
+            if (spot.detailsPromise) return spot.detailsPromise;
+
+            spot.detailsLoading = true;
+            spot.detailsPromise = loadCellDetails(spot)
+                .then(() => {
+                    spot.detailsLoaded = true;
+                    spot.detailsLoading = false;
+                    delete spot.detailsPromise;
+                    saveMarineCache();
+                })
+                .catch((error) => {
+                    spot.detailsLoading = false;
+                    delete spot.detailsPromise;
+                    throw error;
+                });
+
+            return spot.detailsPromise;
+        }
+
+        async function loadCellDetails(spot) {
+            const sourceLat = spot.sourceLat ?? spot.lat;
+            const sourceLon = spot.sourceLon ?? spot.lon;
+
+            const marineUrl = new URL("https://marine-api.open-meteo.com/v1/marine");
+            marineUrl.searchParams.set("latitude", sourceLat.toFixed(5));
+            marineUrl.searchParams.set("longitude", sourceLon.toFixed(5));
+            marineUrl.searchParams.set("hourly", "wave_height,wave_direction,wave_period,sea_surface_temperature,ocean_current_velocity,ocean_current_direction");
+            marineUrl.searchParams.set("daily", "wave_height_max,wave_direction_dominant,wave_period_max");
+            marineUrl.searchParams.set("timezone", "auto");
+            marineUrl.searchParams.set("cell_selection", "sea");
+            marineUrl.searchParams.set("forecast_days", "7");
+
+            const weatherUrl = new URL("https://api.open-meteo.com/v1/forecast");
+            weatherUrl.searchParams.set("latitude", sourceLat.toFixed(5));
+            weatherUrl.searchParams.set("longitude", sourceLon.toFixed(5));
+            weatherUrl.searchParams.set("hourly", "temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m");
+            weatherUrl.searchParams.set("wind_speed_unit", "ms");
+            weatherUrl.searchParams.set("timezone", "auto");
+            weatherUrl.searchParams.set("cell_selection", "sea");
+            weatherUrl.searchParams.set("forecast_days", "7");
+
+            const [marineResponse, weatherResponse] = await Promise.all([
+                fetchWithRetry(marineUrl, { retries: 2, baseDelayMs: 1200 }),
+                fetchWithRetry(weatherUrl, { retries: 2, baseDelayMs: 1200 })
+            ]);
+
+            const [marineData, weatherData] = await Promise.all([
+                marineResponse.json(),
+                weatherResponse.json()
+            ]);
+
+            const daysCount = Math.min(
+                spot.forecast.length,
+                marineData.daily?.time?.length || spot.forecast.length
+            );
+
+            for (let dayIndex = 0; dayIndex < daysCount; dayIndex += 1) {
+                const startIndex = dayIndex * 24;
+                const hourly = [];
+
+                for (let hour = 0; hour < 24; hour += 1) {
+                    const index = startIndex + hour;
+                    const currentKmh = marineData.hourly?.ocean_current_velocity?.[index];
+
+                    hourly.push({
+                        hour,
+                        waveHeight: marineData.hourly?.wave_height?.[index] ?? null,
+                        waveDirection: marineData.hourly?.wave_direction?.[index] ?? null,
+                        wavePeriod: marineData.hourly?.wave_period?.[index] ?? null,
+                        waterTemp: marineData.hourly?.sea_surface_temperature?.[index] ?? null,
+                        currentSpeedKn: Number.isFinite(currentKmh) ? currentKmh * 0.539957 : null,
+                        currentDirection: marineData.hourly?.ocean_current_direction?.[index] ?? null,
+                        airTemp: weatherData.hourly?.temperature_2m?.[index] ?? null,
+                        windSpeed: weatherData.hourly?.wind_speed_10m?.[index] ?? null,
+                        windGusts: weatherData.hourly?.wind_gusts_10m?.[index] ?? null,
+                        windDir: weatherData.hourly?.wind_direction_10m?.[index] ?? null
+                    });
+                }
+
+                const midday = hourly[12] || {};
+                const waterTemp = averageFinite(hourly.map((item) => item.waterTemp));
+                const currentSpeedKn = averageFinite(hourly.map((item) => item.currentSpeedKn));
+                const currentDirection = midday.currentDirection ?? null;
+
+                Object.assign(spot.forecast[dayIndex], {
+                    waveHeight: marineData.daily?.wave_height_max?.[dayIndex] ?? spot.forecast[dayIndex].waveHeight,
+                    waveDirection: marineData.daily?.wave_direction_dominant?.[dayIndex] ?? spot.forecast[dayIndex].waveDirection,
+                    wavePeriod: marineData.daily?.wave_period_max?.[dayIndex] ?? spot.forecast[dayIndex].wavePeriod,
+                    airTemp: midday.airTemp ?? null,
+                    waterTemp,
+                    windSpeed: midday.windSpeed ?? null,
+                    windGusts: midday.windGusts ?? null,
+                    windDirection: midday.windDir ?? null,
+                    currentSpeedKn,
+                    currentDirection,
+                    hourly
+                });
+            }
+        }
+
+        function showCellLoading(spot) {
+            const panel = document.getElementById("map-info-panel");
+            panel.innerHTML = `
+                <div class="info-placeholder">
+                    <span class="map-cell-loading" aria-hidden="true"></span>
+                    <span>Загружаем почасовые данные для ячейки «${spot.name}»…</span>
+                </div>
+            `;
+        }
+
+        function resetInfoPanel() {
+            const panel = document.getElementById("map-info-panel");
+            panel.innerHTML = `
+                <div class="info-placeholder">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9"/>
+                        <path d="M12 10v6M12 7h.01" stroke-linecap="round"/>
+                    </svg>
+                    <span>Выберите морскую ячейку на карте, чтобы открыть подробный прогноз.</span>
+                </div>
+            `;
+        }
+
+        function updateActiveSpotPanel() {
+            if (!activeSpotId) return;
+            const spot = spotsData.find((item) => item.id === activeSpotId);
+            if (!spot) return;
+
+            if (spot.detailsLoaded) {
+                showSpotVerdict(spot, spot.forecast[selectedDayIndex]);
+            } else {
+                openCellForecast(spot);
+            }
+        }
+
+        function showSpotVerdict(spot, day, detailsUnavailable = false) {
+            const panel = document.getElementById("map-info-panel");
+            const waveHeight = day?.waveHeight;
+            const hasWave = hasMetric(waveHeight);
+
+            let verdictText = "Данных недостаточно для оценки условий.";
+            let verdictTitle = "Нет данных.";
+            let dotTone = "unknown";
+
+            if (hasWave) {
+                verdictTitle = "Низкая волна.";
+                verdictText = "Условия выглядят спокойными, но сверяйтесь с локальными предупреждениями и фактической обстановкой.";
+                dotTone = "";
+
+                if (waveHeight >= 0.6 && waveHeight <= 1.4) {
+                    verdictTitle = "Умеренная волна.";
+                    verdictText = "Возможны заметная качка и ухудшение условий у открытого берега.";
+                    dotTone = "warning";
+                }
+
+                if (waveHeight > 1.4) {
+                    verdictTitle = "Высокая волна.";
+                    verdictText = "Выход требует профессиональной оценки, локального прогноза и подтверждения ответственного лица.";
+                    dotTone = "danger";
+                }
+            }
+
+            let suitAdvice = "—";
+            if (hasMetric(day?.waterTemp)) {
+                suitAdvice = "Гидрокостюм 3 мм или короткий shorty.";
+                if (day.waterTemp >= 30) suitAdvice = "Тонкая лайкра или рашгард; учитывайте длительность работы в воде.";
+                if (day.waterTemp < 27) suitAdvice = "Рекомендуется полный гидрокостюм 5 мм.";
+            }
+
+            const directions = [
+                `Волна от ${formatDirection(day?.waveDirection)}`,
+                `ветер от ${formatDirection(day?.windDirection)}`,
+                `течение к ${formatDirection(day?.currentDirection)}`
+            ].join(" · ");
+
+            const hourlyRows = Array.isArray(day?.hourly) && day.hourly.length
+                ? day.hourly
+                    .filter((hour) => hour.hour >= 5 && hour.hour <= 22)
+                    .map((hour) => {
+                        let waveTone = "";
+                        if (hasMetric(hour.waveHeight)) {
+                            waveTone = "good";
+                            if (hour.waveHeight >= 0.6) waveTone = "warning";
+                            if (hour.waveHeight > 1.4) waveTone = "danger";
+                        }
+
+                        return `
+                            <div class="hourly-row">
+                                <span class="hourly-time">${String(hour.hour).padStart(2, "0")}:00</span>
+                                <span class="hourly-value ${waveTone}" title="Высота волны">${formatMetric(hour.waveHeight, 1, " м")}</span>
+                                <span class="hourly-value" title="Скорость ветра">${formatMetric(hour.windSpeed, 1, " м/с")}</span>
+                                <span class="hourly-value" title="Скорость течения">${formatMetric(hour.currentSpeedKn, 1, " уз")}</span>
+                            </div>
+                        `;
+                    })
+                    .join("")
+                : `<div class="info-placeholder"><span>${detailsUnavailable ? "Почасовые данные недоступны." : "Почасовые данные ещё не загружены."}</span></div>`;
+
+            panel.innerHTML = `
+                <div class="forecast-panel">
+                    <div class="forecast-topline">
+                        <p class="location-name">${spot.name}</p>
+                        <div class="metric-chips">
+                            <span class="metric-chip">Волна ${formatMetric(waveHeight, 1, " м")}</span>
+                            <span class="metric-chip">Период ${formatMetric(day?.wavePeriod, 1, " с")}</span>
+                            <span class="metric-chip">Вода ${hasMetric(day?.waterTemp) ? `+${formatMetric(day.waterTemp, 1, " °C")}` : "—"}</span>
+                            <span class="metric-chip">Ветер ${formatMetric(day?.windSpeed, 1, " м/с")}</span>
+                            <span class="metric-chip">Течение ${formatMetric(day?.currentSpeedKn, 1, " уз")}</span>
+                        </div>
+                    </div>
+
+                    <div class="forecast-grid">
+                        <div class="forecast-note"><strong>Направления</strong><br>${directions}</div>
+                        <div class="forecast-note"><strong>Положение</strong><br>${formatMetric(spot.distanceKm, 0, " км")} от центра сетки · ${spot.lat.toFixed(3)}, ${spot.lon.toFixed(3)}</div>
+                        <div class="forecast-note"><strong>Экипировка</strong><br>${suitAdvice}</div>
+                        <div class="forecast-note"><strong>Температура воздуха</strong><br>${hasMetric(day?.airTemp) ? `+${formatMetric(day.airTemp, 1, " °C")}` : "—"}</div>
+                    </div>
+
+                    <div class="verdict">
+                        <span class="status-dot ${dotTone}" aria-hidden="true"></span>
+                        <span><strong>${verdictTitle}</strong> ${verdictText}</span>
+                    </div>
+
+                    <p class="hourly-heading">Почасовой прогноз 05:00–22:00 · волна / ветер / течение</p>
+                    <div class="hourly-list">${hourlyRows}</div>
+                </div>
+            `;
+        }
+
+        function getWaveColor(waveHeight) {
+            if (!hasMetric(waveHeight)) return "#747775";
+            if (waveHeight > 1.4) return "#b3261e";
+            if (waveHeight >= 0.6) return "#f9ab00";
+            return "#188038";
+        }
+
         function hasMetric(value) {
             return Number.isFinite(value);
         }
@@ -2047,215 +2727,59 @@
             })}${suffix}`;
         }
 
-        function evaluateWindType(windDirection, shoreAzimuth) {
-            if (!hasMetric(windDirection)) {
-                return { text: "—", tone: "" };
-            }
-
-            if (shoreAzimuth === 0) {
-                return {
-                    text: "Островной спот: условия зависят от выбранной бухты.",
-                    tone: ""
-                };
-            }
-
-            let difference = Math.abs(windDirection - shoreAzimuth);
-            if (difference > 180) difference = 360 - difference;
-
-            if (difference < 45) {
-                return {
-                    text: "Ветер в берег: возможны накат и снижение прозрачности.",
-                    tone: "danger"
-                };
-            }
-
-            if (difference > 135) {
-                return {
-                    text: "Ветер с берега: поверхность обычно спокойнее.",
-                    tone: "good"
-                };
-            }
-
-            return {
-                text: "Боковой ветер: возможно течение вдоль рифа.",
-                tone: "warning"
-            };
+        function averageFinite(values) {
+            const finite = values.filter(Number.isFinite);
+            if (!finite.length) return null;
+            return finite.reduce((sum, value) => sum + value, 0) / finite.length;
         }
 
-        function drawSelectionCircle(spot) {
-            if (!map || !spot) return;
-
-            if (selectionCircle) {
-                map.removeLayer(selectionCircle);
-            }
-
-            selectionCircle = L.circle([spot.lat, spot.lon], {
-                color: "#0b57d0",
-                weight: 2.5,
-                dashArray: "7 7",
-                fill: false,
-                radius: 8200,
-                interactive: false
-            }).addTo(map);
-
-            selectionCircle.bringToFront();
+        function formatDirection(degrees) {
+            if (!hasMetric(degrees)) return "—";
+            const normalized = ((degrees % 360) + 360) % 360;
+            const labels = ["С", "СВ", "В", "ЮВ", "Ю", "ЮЗ", "З", "СЗ"];
+            const label = labels[Math.round(normalized / 45) % 8];
+            return `${Math.round(normalized)}° ${label}`;
         }
 
-        function renderSeaZones() {
-            if (!map || !spotsData.length) return;
-
-            mapCircles.forEach((circle) => map.removeLayer(circle));
-            mapCircles = [];
-
-            if (selectionCircle) {
-                map.removeLayer(selectionCircle);
-                selectionCircle = null;
-            }
-
-            spotsData.forEach((spot) => {
-                const day = spot.forecast[selectedDayIndex];
-                const waveHeight = day.waveHeight;
-                let color = "#747775";
-
-                if (hasMetric(waveHeight)) {
-                    color = "#188038";
-                    if (waveHeight >= 0.6 && waveHeight <= 1.4) color = "#f9ab00";
-                    if (waveHeight > 1.4) color = "#b3261e";
-                }
-
-                const circle = L.circle([spot.lat, spot.lon], {
-                    color,
-                    fillColor: color,
-                    fillOpacity: 0.28,
-                    radius: 6500,
-                    weight: 2
-                }).addTo(map);
-
-                const formattedWaveHeight = formatMetric(waveHeight, 1, " м");
-
-                circle.bindTooltip(
-                    `<strong>${spot.name}</strong><br>Макс. волна: ${formattedWaveHeight}`,
-                    {
-                        direction: "top",
-                        className: "spot-tooltip",
-                        opacity: 1
-                    }
-                );
-
-                circle.on("click", () => {
-                    activeSpotId = spot.id;
-                    circle.getElement()?.blur();
-                    drawSelectionCircle(spot);
-                    showSpotVerdict(spot, day);
-                });
-
-                mapCircles.push(circle);
-            });
-
-            const activeSpot = spotsData.find((spot) => spot.id === activeSpotId);
-            if (activeSpot) drawSelectionCircle(activeSpot);
-
-            const day = spotsData[0].forecast[selectedDayIndex];
-            const label = selectedDayIndex === 0 ? "сегодня" : selectedDayIndex === 1 ? "завтра" : day.dateStr;
-            document.getElementById("map-status-text").textContent = `Прогноз на ${label}. Выберите зону на карте.`;
+        function formatCellName(distanceKm, bearing) {
+            if (distanceKm < 5) return "Морская ячейка рядом с вами";
+            return `Морская ячейка · ${Math.round(distanceKm)} км ${bearingToPhrase(bearing)}`;
         }
 
-        function updateActiveSpotPanel() {
-            if (!activeSpotId) return;
-            const spot = spotsData.find((item) => item.id === activeSpotId);
-            if (spot) showSpotVerdict(spot, spot.forecast[selectedDayIndex]);
+        function bearingToPhrase(bearing) {
+            const labels = [
+                "к северу", "к северо-востоку", "к востоку", "к юго-востоку",
+                "к югу", "к юго-западу", "к западу", "к северо-западу"
+            ];
+            return labels[Math.round((((bearing % 360) + 360) % 360) / 45) % 8];
         }
 
-        function showSpotVerdict(spot, day) {
-            const panel = document.getElementById("map-info-panel");
-            const waveHeight = day.waveHeight;
-            const windAssessment = evaluateWindType(day.windDirection, spot.shoreAzimuth);
-            const hasWave = hasMetric(waveHeight);
+        function haversineKm(lat1, lon1, lat2, lon2) {
+            const earthRadiusKm = 6371;
+            const toRadians = (value) => value * Math.PI / 180;
+            const deltaLat = toRadians(lat2 - lat1);
+            const deltaLon = toRadians(lon2 - lon1);
+            const firstLat = toRadians(lat1);
+            const secondLat = toRadians(lat2);
 
-            let verdictText = "Данные для оценки условий недоступны.";
-            let verdictTone = "unknown";
-            let dotTone = "";
+            const a = Math.sin(deltaLat / 2) ** 2
+                + Math.cos(firstLat) * Math.cos(secondLat) * Math.sin(deltaLon / 2) ** 2;
 
-            if (hasWave) {
-                verdictText = "Условия комфортные для выхода в море и обучения.";
-                verdictTone = "good";
+            return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
 
-                if (waveHeight >= 0.6 && waveHeight <= 1.4) {
-                    verdictText = "Умеренная зыбь. На лодке может укачивать, у берега возможна взвесь песка.";
-                    verdictTone = "warning";
-                    dotTone = "warning";
-                }
+        function bearingDegrees(lat1, lon1, lat2, lon2) {
+            const toRadians = (value) => value * Math.PI / 180;
+            const toDegrees = (value) => value * 180 / Math.PI;
+            const firstLat = toRadians(lat1);
+            const secondLat = toRadians(lat2);
+            const deltaLon = toRadians(lon2 - lon1);
 
-                if (waveHeight > 1.4) {
-                    verdictText = "Высокая волна. Погружение требует подтверждения дайв-центра и инструктора.";
-                    verdictTone = "danger";
-                    dotTone = "danger";
-                }
-            }
+            const y = Math.sin(deltaLon) * Math.cos(secondLat);
+            const x = Math.cos(firstLat) * Math.sin(secondLat)
+                - Math.sin(firstLat) * Math.cos(secondLat) * Math.cos(deltaLon);
 
-            let suitAdvice = "—";
-            if (hasMetric(day.waterTemp)) {
-                suitAdvice = "Гидрокостюм 3 мм или короткий shorty.";
-                if (day.waterTemp >= 30) suitAdvice = "Достаточно тонкой лайкры или рашгарда.";
-                if (day.waterTemp < 27) suitAdvice = "Рекомендуется полный гидрокостюм 5 мм.";
-            }
-
-            const hourlyRows = day.hourly
-                .filter((hour) => hour.hour >= 5 && hour.hour <= 22)
-                .map((hour) => {
-                    let waveTone = "";
-                    if (hasMetric(hour.waveHeight)) {
-                        waveTone = "good";
-                        if (hour.waveHeight >= 0.6) waveTone = "warning";
-                        if (hour.waveHeight > 1.4) waveTone = "danger";
-                    }
-
-                    const gustTone = hasMetric(hour.windGusts) && hour.windGusts > 10 ? "danger" : "";
-
-                    return `
-                        <div class="hourly-row">
-                            <span class="hourly-time">${String(hour.hour).padStart(2, "0")}:00</span>
-                            <span class="hourly-value ${waveTone}" title="Высота волны">${formatMetric(hour.waveHeight, 1, " м")}</span>
-                            <span class="hourly-value" title="Скорость ветра">${formatMetric(hour.windSpeed, 0, " м/с")}</span>
-                            <span class="hourly-value ${gustTone}" title="Порывы ветра">${formatMetric(hour.windGusts, 0, " м/с")}</span>
-                        </div>
-                    `;
-                })
-                .join("");
-
-            const verdictTitle = verdictTone === "good"
-                ? "Хорошие условия."
-                : verdictTone === "warning"
-                    ? "Умеренные условия."
-                    : verdictTone === "danger"
-                        ? "Сложные условия."
-                        : "Нет данных.";
-
-            panel.innerHTML = `
-                <div class="forecast-panel">
-                    <div class="forecast-topline">
-                        <p class="location-name">${spot.name}</p>
-                        <div class="metric-chips">
-                            <span class="metric-chip">Волна ${formatMetric(waveHeight, 1, " м")}</span>
-                            <span class="metric-chip">Вода ${hasMetric(day.waterTemp) ? `+${formatMetric(day.waterTemp, 1, " °C")}` : "—"}</span>
-                            <span class="metric-chip">Ветер ${formatMetric(day.windSpeed, 0, " м/с")}</span>
-                        </div>
-                    </div>
-
-                    <div class="forecast-grid">
-                        <div class="forecast-note ${windAssessment.tone}"><strong>Направление ветра</strong><br>${windAssessment.text}</div>
-                        <div class="forecast-note"><strong>Экипировка</strong><br>${suitAdvice}</div>
-                    </div>
-
-                    <div class="verdict">
-                        <span class="status-dot ${dotTone}" aria-hidden="true"></span>
-                        <span><strong>${verdictTitle}</strong> ${verdictText}</span>
-                    </div>
-
-                    <p class="hourly-heading">Почасовой прогноз 05:00–22:00 · волна / ветер / порывы</p>
-                    <div class="hourly-list">${hourlyRows}</div>
-                </div>
-            `;
+            return (toDegrees(Math.atan2(y, x)) + 360) % 360;
         }
 
         function toggleWeatherBlock() {
@@ -2271,7 +2795,7 @@
             toggleWeatherButton.classList.toggle("is-collapsed", isWeatherCollapsed);
 
             if (isWeatherCollapsed) {
-                document.getElementById("map-status-text").textContent = "Прогноз загружен. Карта свернута.";
+                document.getElementById("map-status-text").textContent = "Морская сетка загружена. Карта свернута.";
             } else {
                 requestAnimationFrame(() => {
                     map?.invalidateSize();
@@ -2280,6 +2804,8 @@
                 });
             }
         }
+
+        window.addEventListener("popstate", initFromUrl);
 
         initFromUrl();
         restoreMarineCache();
